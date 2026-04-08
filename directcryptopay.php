@@ -3,7 +3,7 @@
  * Plugin Name: DirectCryptoPay
  * Plugin URI:  https://directcryptopay.com
  * Description: Accept crypto payments and donations directly on your WordPress site. Includes WooCommerce gateway. Web3, Non-custodial, No middlemen.
- * Version:     1.3.0
+ * Version:     1.4.0
  * Author:      DirectCryptoPay
  * Author URI:  https://directcryptopay.com
  * License:     GPLv2 or later
@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
 
 define('DCP_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('DCP_PLUGIN_URL', plugin_dir_url(__FILE__));
-define('DCP_VERSION', '1.3.0');
+define('DCP_VERSION', '1.4.0');
 
 /**
  * Add Settings Menu
@@ -60,7 +60,7 @@ function dcp_settings_page() {
                 <div style="background: #f59e0b; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; margin-bottom: 15px;">1</div>
                 <h3 style="margin-top: 0; color: #1f2937;">Create Account</h3>
                 <p style="color: #6b7280; margin-bottom: 20px;">Don't have an account? Sign up for free on DirectCryptoPay.</p>
-                <a href="https://test-app.directcryptopay.com/auth/signin" target="_blank" style="display: inline-block; background: #f59e0b; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 15px;">
+                <a href="https://directcryptopay.com/auth/signin" target="_blank" style="display: inline-block; background: #f59e0b; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 15px;">
                     ✨ Sign Up / Login →
                 </a>
             </div>
@@ -70,16 +70,16 @@ function dcp_settings_page() {
                 <div style="background: #3b82f6; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; margin-bottom: 15px;">2</div>
                 <h3 style="margin-top: 0; color: #1f2937;">Create Integration</h3>
                 <p style="color: #6b7280; margin-bottom: 20px;">In your Dashboard, go to Integrations and create a new integration.</p>
-                <a href="https://test-app.directcryptopay.com/dashboard/integrations" target="_blank" style="display: inline-block; background: #3b82f6; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 500;">
+                <a href="https://directcryptopay.com/dashboard/integrations" target="_blank" style="display: inline-block; background: #3b82f6; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 500;">
                     📊 Open Dashboard →
                 </a>
             </div>
 
-            <!-- Step 3: Copy Public ID -->
+            <!-- Step 3: Copy Integration ID -->
             <div style="background: white; border: 2px solid #e5e7eb; border-radius: 8px; padding: 25px;">
                 <div style="background: #10b981; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; margin-bottom: 15px;">3</div>
-                <h3 style="margin-top: 0; color: #1f2937;">Copy Public ID</h3>
-                <p style="color: #6b7280; margin-bottom: 20px;">In the Integrations list, copy the <strong>Public ID</strong> (column "Public ID").</p>
+                <h3 style="margin-top: 0; color: #1f2937;">Copy Integration ID</h3>
+                <p style="color: #6b7280; margin-bottom: 20px;">In the Integrations list, copy the <strong>Integration ID</strong> (column "Integration ID").</p>
                 <div style="background: #f3f4f6; padding: 15px; border-radius: 6px; border-left: 4px solid #10b981;">
                     <code style="font-size: 13px; color: #374151;">Example: int_sub_01ka9z...</code>
                 </div>
@@ -89,7 +89,7 @@ function dcp_settings_page() {
             <div style="background: white; border: 2px solid #e5e7eb; border-radius: 8px; padding: 25px;">
                 <div style="background: #8b5cf6; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; margin-bottom: 15px;">4</div>
                 <h3 style="margin-top: 0; color: #1f2937;">Configure Plugin</h3>
-                <p style="color: #6b7280; margin-bottom: 20px;">Paste your Public ID in the form below and save.</p>
+                <p style="color: #6b7280; margin-bottom: 20px;">Paste your Integration ID in the form below and save.</p>
                 <div style="background: #f3f4f6; padding: 15px; border-radius: 6px;">
                     <p style="margin: 0; font-size: 14px; color: #6b7280;">👇 See form below</p>
                 </div>
@@ -99,7 +99,7 @@ function dcp_settings_page() {
         <!-- Configuration Success -->
         <div style="background: #d1fae5; border: 2px solid #10b981; border-radius: 8px; padding: 20px; margin: 20px 0;">
             <h3 style="color: #065f46; margin-top: 0;">✅ Plugin Configured!</h3>
-            <p style="color: #047857; margin-bottom: 0;">Your Public ID is saved. You can now use shortcodes on your pages.</p>
+            <p style="color: #047857; margin-bottom: 0;">Your Integration ID is saved. You can now use shortcodes on your pages.</p>
         </div>
         <?php endif; ?>
 
@@ -113,7 +113,7 @@ function dcp_settings_page() {
             <table class="form-table">
                 <tr valign="top">
                     <th scope="row">
-                        <label for="dcp_public_id">Public ID <span style="color: #dc2626;">*</span></label>
+                        <label for="dcp_public_id">Integration ID <span style="color: #dc2626;">*</span></label>
                     </th>
                     <td>
                         <input
@@ -127,12 +127,12 @@ function dcp_settings_page() {
                             style="font-family: monospace; font-size: 14px;"
                         />
                         <p class="description">
-                            <strong>How to get your Public ID:</strong><br>
-                            1. Go to your <a href="https://test-app.directcryptopay.com/dashboard/integrations" target="_blank" style="color: #3b82f6; text-decoration: none; font-weight: 500;">DirectCryptoPay Dashboard → Integrations</a><br>
+                            <strong>How to get your Integration ID:</strong><br>
+                            1. Go to your <a href="https://directcryptopay.com/dashboard/integrations" target="_blank" style="color: #3b82f6; text-decoration: none; font-weight: 500;">DirectCryptoPay Dashboard → Integrations</a><br>
                             2. Find the integration you want to use<br>
-                            3. Copy the <strong>Public ID</strong> from the "Public ID" column (starts with <code>int_</code>)<br>
+                            3. Copy the <strong>Integration ID</strong> from the "Integration ID" column (starts with <code>int_</code>)<br>
                             4. Paste it in the field above<br>
-                            <span style="color: #dc2626;">⚠️ Important:</span> Use the <strong>Public ID</strong>, not the integration name.
+                            <span style="color: #dc2626;">⚠️ Important:</span> Use the <strong>Integration ID</strong>, not the integration name.
                         </p>
                     </td>
                 </tr>
@@ -228,7 +228,7 @@ const paymentId = params.get('payment_id');
                             <li><strong>Default Currency:</strong> ETH, USDC, or USDT</li>
                         </ul>
                     </li>
-                    <li>Your Public ID from DirectCryptoPay Settings is used automatically</li>
+                    <li>Your Integration ID from DirectCryptoPay Settings is used automatically</li>
                     <li>Test with a checkout - the widget launches automatically!</li>
                 </ol>
                 <div style="background: #fff7ed; border: 1px solid #fb923c; padding: 12px; margin-top: 15px; border-radius: 4px;">
@@ -248,7 +248,7 @@ const paymentId = params.get('payment_id');
                 <a href="https://docs.directcryptopay.com" target="_blank" style="display: inline-block; background: white; color: #854d0e; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 500; border: 2px solid #facc15;">
                     📚 Documentation
                 </a>
-                <a href="https://test-app.directcryptopay.com/dashboard" target="_blank" style="display: inline-block; background: white; color: #854d0e; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 500; border: 2px solid #facc15;">
+                <a href="https://directcryptopay.com/dashboard" target="_blank" style="display: inline-block; background: white; color: #854d0e; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 500; border: 2px solid #facc15;">
                     🎛️ Dashboard
                 </a>
                 <a href="mailto:support@directcryptopay.com" style="display: inline-block; background: white; color: #854d0e; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 500; border: 2px solid #facc15;">
@@ -288,58 +288,42 @@ function dcp_load_scripts() {
 
     switch ($env) {
         case 'local':
-            $widget_url = 'http://localhost:4002/widget/dcp-widget.umd.js';
+            $widget_url = 'http://localhost:4001/widget/dcp-widget.umd.js';
+            $api_url = 'http://localhost:4001';
             break;
         case 'staging':
         case 'test':
-            $widget_url = 'https://test-pay.directcryptopay.com/widget/dcp-widget.umd.js';
+            $widget_url = 'https://preview-api.directcryptopay.com/widget/dcp-widget.umd.js';
+            $api_url = 'https://preview-api.directcryptopay.com';
             break;
         case 'production':
         default:
-            $widget_url = 'https://pay.directcryptopay.com/widget/dcp-widget.umd.js';
+            $widget_url = 'https://api.directcryptopay.com/widget/dcp-widget.umd.js';
+            $api_url = 'https://api.directcryptopay.com';
             break;
     }
 
-    // NUCLEAR cache busting: timestamp in BOTH query string AND script handle
-    $timestamp = time();
-    $cache_buster = '?bust=' . $timestamp . '&nocache=' . rand();
-
-    // Deregister any previously registered versions
-    wp_deregister_script('dcp-widget');
-
     wp_enqueue_script(
-        'dcp-widget-' . $timestamp,  // Unique handle name each time
-        $widget_url . $cache_buster,
+        'dcp-widget',
+        $widget_url,
         [],
-        null,  // Don't let WordPress add its own version parameter
+        DCP_VERSION,
         true
     );
 
     // Initialize widget globally after it loads
     wp_add_inline_script(
         'dcp-widget',
-        "
-        (function() {
-            console.log('[DCP Plugin] Inline script executing...');
-
+        "(function() {
             function initDCP() {
-                console.log('[DCP Plugin] initDCP called, typeof DCP:', typeof DCP);
                 if (typeof DCP !== 'undefined') {
-                    console.log('[DCP Plugin] Initializing DCP with test API URL');
-                    DCP.init({
-                        baseURL: 'https://test-api.directcryptopay.com'
-                    });
-                    console.log('[DCP Plugin] DCP initialized, isInitialized:', DCP.isInitialized());
+                    DCP.init({ baseURL: '" . esc_js($api_url) . "' });
                 } else {
-                    console.warn('[DCP Plugin] DCP not ready yet, retrying in 100ms...');
                     setTimeout(initDCP, 100);
                 }
             }
-
-            // Try immediately
             initDCP();
-        })();
-        ",
+        })();",
         'after'
     );
 }
@@ -352,10 +336,25 @@ add_shortcode('dcp_pay', 'dcp_pay_shortcode');
 function dcp_pay_shortcode($atts) {
     $public_id = get_option('dcp_public_id', '');
 
+    // Detect environment for API URL
+    if (defined('DCP_ENV')) {
+        $shortcode_env = DCP_ENV;
+    } else {
+        $site_url = get_site_url();
+        if (strpos($site_url, 'localhost') !== false || strpos($site_url, '127.0.0.1') !== false) {
+            $shortcode_env = 'local';
+        } elseif (strpos($site_url, 'test.') !== false || strpos($site_url, 'staging.') !== false || strpos($site_url, 'dev.') !== false) {
+            $shortcode_env = 'test';
+        } else {
+            $shortcode_env = 'production';
+        }
+    }
+    $shortcode_api_url = ($shortcode_env === 'production') ? 'https://api.directcryptopay.com' : (($shortcode_env === 'local') ? 'http://localhost:4001' : 'https://preview-api.directcryptopay.com');
+
     if (empty($public_id)) {
         return '<div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 15px 0; border-radius: 4px;">
             <strong style="color: #92400e;">⚠️ DirectCryptoPay:</strong>
-            <span style="color: #92400e;"> Please configure your Public ID in </span>
+            <span style="color: #92400e;"> Please configure your Integration ID in </span>
             <a href="' . admin_url('admin.php?page=dcp-settings') . '" style="color: #3b82f6; text-decoration: none; font-weight: 600;">Settings</a>.
         </div>';
     }
@@ -384,28 +383,17 @@ function dcp_pay_shortcode($atts) {
     </button>
     <script>
     (function() {
-        console.log('[DCP Shortcode] Script executing for button <?php echo esc_js($button_id); ?>');
-
-        // CRITICAL: Initialize DCP with test API URL BEFORE any payment
         function ensureDCPInit() {
             if (typeof DCP !== 'undefined') {
-                console.log('[DCP Shortcode] DCP found, initializing with test API...');
-                DCP.init({
-                    baseURL: 'https://test-api.directcryptopay.com'
-                });
-                console.log('[DCP Shortcode] DCP initialized, isInitialized:', DCP.isInitialized());
+                DCP.init({ baseURL: '<?php echo esc_js($shortcode_api_url); ?>' });
                 return true;
             }
-            console.warn('[DCP Shortcode] DCP not loaded yet');
             return false;
         }
-
-        // Try to initialize immediately
         ensureDCPInit();
 
-        const button = document.getElementById('<?php echo esc_js($button_id); ?>');
+        var button = document.getElementById('<?php echo esc_js($button_id); ?>');
 
-        // Add hover effect
         button.addEventListener('mouseenter', function() {
             this.style.transform = 'translateY(-2px)';
             this.style.boxShadow = '0 6px 12px rgba(0,0,0,0.15)';
@@ -415,72 +403,42 @@ function dcp_pay_shortcode($atts) {
             this.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
         });
 
-        // Payment handler
         button.addEventListener('click', async function() {
-            console.log('[DCP Shortcode] Button clicked');
-
             if (typeof DCP === 'undefined') {
                 alert('DirectCryptoPay widget not loaded. Please refresh the page.');
                 return;
             }
 
             try {
-                // CRITICAL: Re-initialize before payment to ensure test API URL
-                console.log('[DCP Shortcode] Re-initializing DCP with test API before payment...');
-                DCP.init({
-                    baseURL: 'https://test-api.directcryptopay.com'
-                });
-                console.log('[DCP Shortcode] DCP re-initialized');
+                DCP.init({ baseURL: '<?php echo esc_js($shortcode_api_url); ?>' });
 
-                // Execute payment with integration ID
-                // Using Sepolia testnet (chainId: 11155111)
-                // Currency can be customized in shortcode: [dcp_pay amount="10" currency="ETH"]
-                console.log('[DCP Shortcode] Calling DCP.Payment()...');
-                const result = await DCP.Payment({
+                await DCP.Payment({
                     integrationId: '<?php echo esc_js($public_id); ?>',
                     amount_usd: '<?php echo $amount; ?>',
-                    currency: '<?php echo esc_js($currency); ?>',  // ETH, USDC, USDT, etc.
-                    chainId: 11155111,  // Sepolia testnet
-                    onStatus: (status) => {
-                        console.log('[DCP Shortcode] Payment status:', status);
-
-                        // Handle confirmed payment
+                    onStatus: function(status) {
                         if (status.type === 'confirmed') {
-                            const successUrl = '<?php echo esc_js($success_url); ?>';
-
+                            var successUrl = '<?php echo esc_js($success_url); ?>';
                             if (successUrl) {
-                                // Redirect to custom success page with payment data
-                                const params = new URLSearchParams({
+                                var params = new URLSearchParams({
                                     tx_hash: status.txHash || '',
-                                    payment_id: status.paymentId || '',
+                                    intent_id: status.paymentId || '',
                                     amount: '<?php echo $amount; ?>',
                                     currency: '<?php echo esc_js($currency); ?>',
                                     status: 'success'
                                 });
                                 window.location.href = successUrl + '?' + params.toString();
                             } else {
-                                // Fallback to alert if no custom URL
-                                alert('Payment completed successfully!\\n\\nTransaction: ' + (status.txHash || 'N/A'));
+                                alert('Payment completed successfully!\n\nTransaction: ' + (status.txHash || 'N/A'));
                             }
                         }
                     }
                 });
-                console.log('[DCP Shortcode] Payment result:', result);
             } catch (error) {
-                console.error('Payment error:', error);
+                if (error.message && error.message.includes('User rejected')) return;
 
-                // Skip error redirect if user rejected the transaction
-                if (error.message && error.message.includes('User rejected')) {
-                    console.log('[DCP Shortcode] User rejected transaction');
-                    return;
-                }
-
-                // Redirect to error page or show alert
-                const errorUrl = '<?php echo esc_js($error_url); ?>';
-
+                var errorUrl = '<?php echo esc_js($error_url); ?>';
                 if (errorUrl) {
-                    // Redirect to custom error page with error data
-                    const params = new URLSearchParams({
+                    var params = new URLSearchParams({
                         error: error.message || 'Unknown error',
                         amount: '<?php echo $amount; ?>',
                         currency: '<?php echo esc_js($currency); ?>',
@@ -488,7 +446,6 @@ function dcp_pay_shortcode($atts) {
                     });
                     window.location.href = errorUrl + '?' + params.toString();
                 } else {
-                    // Fallback to alert if no custom URL
                     alert('Payment failed: ' + error.message);
                 }
             }
@@ -622,18 +579,22 @@ add_action('wp_ajax_dcp_mark_order_paid', 'dcp_mark_order_paid');
 add_action('wp_ajax_nopriv_dcp_mark_order_paid', 'dcp_mark_order_paid');
 
 function dcp_mark_order_paid() {
-    // Verify required parameters
     if (!isset($_POST['order_id']) || !isset($_POST['order_key']) || !isset($_POST['tx_hash'])) {
         wp_send_json_error(array('message' => 'Missing required parameters'));
         return;
     }
 
-    $order_id = intval($_POST['order_id']);
+    $order_id  = intval($_POST['order_id']);
     $order_key = sanitize_text_field($_POST['order_key']);
-    $tx_hash = sanitize_text_field($_POST['tx_hash']);
-    $payment_id = isset($_POST['payment_id']) ? sanitize_text_field($_POST['payment_id']) : '';
+    $tx_hash   = sanitize_text_field($_POST['tx_hash']);
+    $intent_id = isset($_POST['intent_id']) ? sanitize_text_field($_POST['intent_id']) : '';
 
-    // Get order
+    // Verify nonce
+    if (!wp_verify_nonce($_POST['_wpnonce'] ?? '', 'dcp_mark_order_paid_' . $order_id)) {
+        wp_send_json_error(array('message' => 'Invalid nonce'));
+        return;
+    }
+
     $order = wc_get_order($order_id);
 
     if (!$order) {
@@ -641,39 +602,33 @@ function dcp_mark_order_paid() {
         return;
     }
 
-    // Verify order key for security
     if ($order->get_order_key() !== $order_key) {
         wp_send_json_error(array('message' => 'Invalid order key'));
         return;
     }
 
-    // Check if order is already completed
     if ($order->has_status(array('processing', 'completed'))) {
         wp_send_json_success(array('message' => 'Order already completed'));
         return;
     }
 
-    // Mark payment complete
     $order->payment_complete($tx_hash);
 
-    // Add order note
-    $note = sprintf(
-        __('DirectCryptoPay payment confirmed.%s%s', 'directcryptopay'),
-        PHP_EOL . 'TX Hash: ' . $tx_hash,
-        $payment_id ? PHP_EOL . 'Payment ID: ' . $payment_id : ''
-    );
-    $order->add_order_note($note);
+    $order->add_order_note(sprintf(
+        __('DirectCryptoPay: payment confirmed (client-side).%sTX: %s%s', 'directcryptopay'),
+        PHP_EOL, $tx_hash,
+        $intent_id ? PHP_EOL . 'Intent: ' . $intent_id : ''
+    ));
 
-    // Store transaction metadata
     $order->update_meta_data('_dcp_tx_hash', $tx_hash);
-    if ($payment_id) {
-        $order->update_meta_data('_dcp_payment_id', $payment_id);
+    if ($intent_id) {
+        $order->update_meta_data('_dcp_intent_id', $intent_id);
     }
     $order->save();
 
     wp_send_json_success(array(
-        'message' => 'Order marked as paid',
+        'message'  => 'Order marked as paid',
         'order_id' => $order_id,
-        'status' => $order->get_status()
+        'status'   => $order->get_status()
     ));
 }
