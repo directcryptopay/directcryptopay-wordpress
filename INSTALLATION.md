@@ -1,134 +1,105 @@
-# 🚀 Installation Rapide - Plugin WordPress DirectCryptoPay
+# DirectCryptoPay WordPress Plugin — Installation Guide
 
-## 📥 Téléchargement
+## Requirements
 
-Téléchargez le plugin depuis votre Dashboard DirectCryptoPay :
-**Dashboard → Plugins & Integrations → WordPress → Download Plugin**
+- WordPress 5.8+
+- PHP 7.4+
+- WooCommerce 7.0+ (for WooCommerce gateway only)
+- A DirectCryptoPay account ([create one here](https://directcryptopay.com/auth/signin))
 
-Ou directement : https://test-app.directcryptopay.com/downloads/directcryptopay-wordpress.zip
+## Step 1: Download
 
-## 📦 Installation
+Download the plugin ZIP from:
+- [GitHub Releases](https://github.com/directcryptopay/directcryptopay-wordpress/releases)
+- Or your [DirectCryptoPay Dashboard](https://directcryptopay.com/dashboard)
 
-### Méthode 1 : Via l'interface WordPress (Recommandé)
+## Step 2: Install
 
-1. Connectez-vous à votre **panneau d'administration WordPress**
-2. Allez dans **Extensions** → **Ajouter**
-3. Cliquez sur **Téléverser une extension**
-4. Cliquez sur **Choisir un fichier**
-5. Sélectionnez le fichier `directcryptopay-wordpress.zip`
-6. Cliquez sur **Installer maintenant**
-7. Une fois installé, cliquez sur **Activer l'extension**
+### Option A: WordPress Admin (Recommended)
 
-### Méthode 2 : Via FTP
+1. Go to **Plugins > Add New > Upload Plugin**
+2. Select the `directcryptopay-wordpress.zip` file
+3. Click **Install Now**
+4. Click **Activate**
 
-1. Décompressez le fichier `directcryptopay-wordpress.zip`
-2. Uploadez le dossier `wordpress-plugin` vers `/wp-content/plugins/`
-3. Renommez-le en `directcryptopay`
-4. Allez dans **Extensions** et activez **DirectCryptoPay**
+### Option B: Manual / FTP
 
-## ⚙️ Configuration
+1. Extract `directcryptopay-wordpress.zip`
+2. Upload the `wordpress-plugin` folder to `/wp-content/plugins/`
+3. Rename it to `directcryptopay`
+4. Go to **Plugins** and activate **DirectCryptoPay**
 
-1. Dans le menu WordPress, cliquez sur **DirectCryptoPay** (💰)
-2. Copiez votre **Integration ID** depuis votre [Dashboard DirectCryptoPay](https://test-app.directcryptopay.com/dashboard/integrations)
-3. Collez-le dans le champ **Integration ID**
-4. Vérifiez l'**API URL** :
-   - Testnet : `https://test-api.directcryptopay.com`
-   - Production : `https://api.directcryptopay.com`
-5. Cliquez sur **Enregistrer les modifications**
+## Step 3: Configure
 
-## 🎯 Utilisation
+1. In the WordPress sidebar, click **DirectCryptoPay**
+2. Follow the 4-step wizard:
+   - **Step 1:** Create an account at [directcryptopay.com](https://directcryptopay.com/auth/signin)
+   - **Step 2:** Go to Dashboard > Integrations and create a new integration
+   - **Step 3:** Copy your **Integration ID** (starts with `int_`)
+   - **Step 4:** Paste it in the plugin settings and save
 
-### Shortcode (Simple et rapide)
+## Step 4: Choose Your Integration Method
 
-Ajoutez ce shortcode dans n'importe quelle page, article ou widget :
+### Shortcode (Any WordPress site)
 
-```
-[dcp_pay amount="10" label="Payer avec Crypto"]
-```
-
-**Paramètres disponibles :**
-
-- `amount` - Montant en USD (obligatoire)
-- `label` - Texte du bouton (défaut : "Pay with Crypto")
-- `currency` - Devise d'affichage (défaut : USD)
-- `return_url` - URL de redirection après paiement (optionnel)
-
-**Exemples :**
+Add to any page, post, or widget:
 
 ```
-[dcp_pay amount="5" label="Faire un don"]
+[dcp_pay amount="10" label="Pay with Crypto"]
 ```
 
-```
-[dcp_pay amount="99" label="Acheter Premium" currency="EUR"]
-```
+Parameters:
+- `amount` — Amount in USD (required)
+- `label` — Button text (default: "Pay with Crypto")
+- `currency` — Token: ETH, USDC, or USDT (default: ETH)
+- `success_url` — Custom redirect after payment
+- `error_url` — Custom redirect on error
 
-```
-[dcp_pay amount="25" label="S'abonner" return_url="https://monsite.com/merci"]
-```
+### Gutenberg Block (Visual Editor)
 
-### Bloc Gutenberg (Éditeur visuel)
+1. Click **+** to add a block
+2. Search for **DirectCryptoPay Payment Button**
+3. Configure and publish
 
-1. Dans l'éditeur de page, cliquez sur le **+** pour ajouter un bloc
-2. Cherchez "**DirectCryptoPay Payment Button**"
-3. Configurez le montant, le label et la devise dans les paramètres du bloc
-4. Publiez votre page
+### WooCommerce Gateway (E-commerce)
 
-## 🎨 Personnalisation
+1. Go to **WooCommerce > Settings > Payments**
+2. Enable **DirectCryptoPay** and click **Manage**
+3. Configure:
+   - **Title:** "Pay with Crypto" (shown to customers)
+   - **Description:** Message at checkout
+   - **Default Currency:** ETH, USDC, or USDT
+   - **Webhook Secret:** (optional) From your DCP Dashboard integration
+4. Copy the **Webhook URL** displayed in settings to your DCP Dashboard
 
-Le bouton de paiement utilise le style par défaut de DirectCryptoPay. Vous pouvez personnaliser l'apparence en ajoutant du CSS personnalisé dans votre thème :
+**Checkout flow:** Customer selects "Pay with Crypto" > Widget opens > Customer connects wallet and pays > Order auto-updated to "Processing"
 
-```css
-.dcp-payment-button {
-  /* Vos styles personnalisés */
-}
-```
+## Step 5: Test
 
-## 🔍 Vérification
+1. Set your integration to **Testnet** in the DCP Dashboard
+2. Get test tokens:
+   - Sepolia ETH: [sepoliafaucet.com](https://sepoliafaucet.com)
+   - Sepolia USDC: [faucet.circle.com](https://faucet.circle.com)
+3. Place a test order and pay with test tokens
+4. Verify the order updates in WooCommerce
 
-Pour vérifier que le plugin fonctionne correctement :
+## Step 6: Go Live
 
-1. Créez une page de test
-2. Ajoutez le shortcode : `[dcp_pay amount="1" label="Test"]`
-3. Publiez et visualisez la page
-4. Le bouton DirectCryptoPay devrait apparaître
-5. Cliquez dessus pour ouvrir la modal de paiement
+1. Create a **mainnet** integration in your DCP Dashboard
+2. Update the Integration ID in plugin settings
+3. Place a small real payment to verify
+4. You're live!
 
-## 🆘 Support
+## Troubleshooting
 
-- **Documentation** : https://docs.directcryptopay.com
-- **Dashboard** : https://app.directcryptopay.com
-- **Support** : support@directcryptopay.com
+**Widget not appearing:** Clear WordPress cache plugins, try incognito mode, check browser console.
 
-## ✅ Checklist d'Installation
+**Order not updating:** Verify your site is publicly accessible (webhooks can't reach localhost). Check WooCommerce order notes.
 
-- [ ] Plugin téléchargé
-- [ ] Plugin installé et activé dans WordPress
-- [ ] Integration ID configuré dans les réglages
-- [ ] Page de test créée avec le shortcode
-- [ ] Bouton de paiement visible et fonctionnel
-- [ ] Modal DirectCryptoPay s'ouvre correctement
+**Plugin conflicts:** Temporarily disable other plugins to isolate. Switch to a default theme to rule out theme issues.
 
-## 🔄 Mise à Jour
+## Support
 
-Pour mettre à jour le plugin :
-
-1. Téléchargez la dernière version depuis votre Dashboard
-2. Désactivez le plugin actuel
-3. Supprimez l'ancienne version
-4. Installez la nouvelle version
-5. Réactivez le plugin
-6. Vérifiez que vos réglages sont toujours présents
-
-**Note** : Vos réglages (Integration ID) sont conservés dans la base de données WordPress.
-
-## 🌟 Version
-
-- **Version actuelle** : 1.0.0
-- **Compatibilité WordPress** : 5.0+
-- **Compatibilité PHP** : 7.4+
-- **Testé jusqu'à** : WordPress 6.4
-
----
-
-Développé avec ❤️ par [DirectCryptoPay](https://directcryptopay.com)
+- Docs: [docs.directcryptopay.com](https://docs.directcryptopay.com)
+- Dashboard: [directcryptopay.com/dashboard](https://directcryptopay.com/dashboard)
+- Email: support@directcryptopay.com

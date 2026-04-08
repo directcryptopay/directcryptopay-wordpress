@@ -1,131 +1,133 @@
-# DirectCryptoPay - WordPress & WooCommerce Plugin
+# DirectCryptoPay WordPress Plugin
 
-Accept cryptocurrency payments directly to your wallet on any WordPress site. Non-custodial, multi-chain, zero platform fees on testnet.
+Accept crypto payments directly on your WordPress site. Web3, non-custodial, no middlemen.
 
 ## Features
 
-- **Non-custodial** - Payments go directly to your wallet. No intermediary holds your funds.
-- **Multi-chain** - Supports Ethereum, Polygon, BSC, Arbitrum, Optimism, and Base.
-- **Multiple tokens** - Accept ETH, USDC, USDT, BNB, MATIC, and more.
-- **WooCommerce integration** - Full payment gateway for e-commerce stores.
-- **Gutenberg block** - Drag-and-drop payment button in the WordPress editor.
-- **Shortcode** - Add payment buttons anywhere with `[dcp_pay]`.
-- **Setup wizard** - 4-step guided configuration in the WordPress admin.
-- **Testnet support** - Test payments on Sepolia, Amoy, BSC Testnet before going live.
+- Accept cryptocurrency payments (ETH, USDC, USDT and more)
+- Non-custodial — payments go directly to your wallet
+- Multi-chain support (Ethereum, Polygon, BNB Chain, Base, Arbitrum, Optimism)
+- 3 integration methods: Shortcode, Gutenberg Block, WooCommerce Gateway
+- Smart chain/token selector with real-time wallet balances
+- HMAC-SHA256 webhook verification
+- Testnet and mainnet environments
+- Mobile-friendly payment widget
 
 ## Requirements
 
-- WordPress 5.8 or higher
-- PHP 7.4 or higher
-- A DirectCryptoPay account ([sign up](https://app.directcryptopay.com))
+- WordPress 5.8+
+- PHP 7.4+
+- WooCommerce 7.0+ (for WooCommerce gateway only)
 
 ## Installation
 
-### From ZIP file
-
-1. Download the latest release from [Releases](https://github.com/directcryptopay/directcryptopay-wordpress/releases)
+1. Download `directcryptopay-wordpress.zip` from the [Releases](https://github.com/directcryptopay/directcryptopay-wordpress/releases)
 2. In WordPress admin, go to **Plugins > Add New > Upload Plugin**
 3. Upload the ZIP file and click **Install Now**
-4. Click **Activate Plugin**
-
-### Manual installation
-
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/directcryptopay/directcryptopay-wordpress.git
-   ```
-2. Copy the folder to `wp-content/plugins/directcryptopay/`
-3. Activate the plugin in **Plugins > Installed Plugins**
+4. Click **Activate**
+5. Go to **DirectCryptoPay** in the sidebar and enter your Integration ID
 
 ## Configuration
 
-After activation, navigate to **Settings > DirectCryptoPay** to access the setup wizard:
-
-1. **Connect** - Enter your Integration ID from the DirectCryptoPay dashboard
-2. **Environment** - Select Testnet (for testing) or Mainnet (for production)
-3. **Display** - Configure button style and placement
-4. **Test** - Verify the integration works
-
-### Getting your Integration ID
-
-1. Log in to your [DirectCryptoPay Dashboard](https://app.directcryptopay.com/dashboard)
-2. Go to **Integrations** and create a new integration
-3. Copy the Integration ID
+1. Log in to your [DirectCryptoPay Dashboard](https://directcryptopay.com/dashboard)
+2. Go to **Integrations** and copy your Integration ID
+3. In WordPress, go to **DirectCryptoPay** settings
+4. Paste your Integration ID and save
 
 ## Usage
 
-### Shortcode
-
-Add a payment button anywhere in your posts or pages:
+### Method 1: Shortcode
 
 ```
-[dcp_pay amount="10" label="Pay with Crypto" currency="USD"]
+[dcp_pay amount="10" label="Pay with Crypto"]
 ```
 
 **Parameters:**
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `amount` | `10` | Payment amount |
-| `label` | `Pay with Crypto` | Button text |
-| `currency` | `USD` | Currency code (USD, ETH, USDC, USDT) |
-| `success_url` | - | Redirect URL after successful payment |
-| `error_url` | - | Redirect URL on payment failure |
+| Parameter | Required | Default | Description |
+|-----------|----------|---------|-------------|
+| `amount` | Yes | `10` | Amount in USD |
+| `label` | No | `Pay with Crypto` | Button text |
+| `currency` | No | `ETH` | Token symbol (ETH, USDC, USDT) |
+| `success_url` | No | — | Redirect URL after successful payment |
+| `error_url` | No | — | Redirect URL if payment fails |
 
-### Gutenberg Block
-
-1. In the WordPress editor, click **+** to add a new block
-2. Search for **DirectCryptoPay**
-3. Configure the amount and button text in the block settings
-
-### WooCommerce
-
-When WooCommerce is active, DirectCryptoPay automatically registers as a payment gateway:
-
-1. Go to **WooCommerce > Settings > Payments**
-2. Enable **DirectCryptoPay**
-3. Configure the payment method title and default currency
-4. Customers can now pay with crypto at checkout
-
-## File Structure
+**Examples:**
 
 ```
-directcryptopay/
-├── directcryptopay.php                          # Main plugin file
-├── includes/
-│   └── class-wc-gateway-directcryptopay.php     # WooCommerce gateway
-├── assets/
-│   └── block.js                                 # Gutenberg block
-├── INSTALLATION.md                              # Detailed setup guide
-└── README.md                                    # This file
+[dcp_pay amount="5" label="Donate" currency="ETH"]
+[dcp_pay amount="25" label="Buy Premium" currency="USDC" success_url="https://yoursite.com/thank-you"]
+[dcp_pay amount="99" label="Subscribe" success_url="https://yoursite.com/welcome" error_url="https://yoursite.com/error"]
 ```
 
-## Supported Chains & Tokens
+The success page receives URL parameters: `tx_hash`, `intent_id`, `amount`, `currency`, `status`.
 
-| Chain | Mainnet | Testnet | Tokens |
-|-------|---------|---------|--------|
-| Ethereum | Chain ID 1 | Sepolia (11155111) | ETH, USDC, USDT |
-| Polygon | Chain ID 137 | Amoy (80002) | MATIC, USDC, USDT |
-| BSC | Chain ID 56 | BSC Testnet (97) | BNB, USDC, USDT |
-| Base | Chain ID 8453 | Base Sepolia (84532) | ETH, USDC |
-| Arbitrum | Chain ID 42161 | Arb Sepolia (421614) | ETH, USDC |
-| Optimism | Chain ID 10 | OP Sepolia (11155420) | ETH, USDC |
+### Method 2: Gutenberg Block
 
-## Documentation
+1. In the page/post editor, click **+** to add a block
+2. Search for **DirectCryptoPay Payment Button**
+3. Configure amount, label, and currency in block settings
+4. Publish your page
 
-Full documentation is available at [docs.directcryptopay.com](https://docs.directcryptopay.com).
+### Method 3: WooCommerce Gateway
 
-- [Getting Started](https://docs.directcryptopay.com/getting-started/create-account.html)
-- [WordPress Plugin Guide](https://docs.directcryptopay.com/plugins/wordpress.html)
-- [API Reference](https://docs.directcryptopay.com/api/reference.html)
-- [Webhooks](https://docs.directcryptopay.com/backend/webhooks.html)
+1. Ensure WooCommerce is installed and active
+2. Go to **WooCommerce > Settings > Payments**
+3. Enable **DirectCryptoPay** and click **Manage**
+4. Configure title, description, and default currency
+5. (Optional) Enter your Webhook Secret for server-side verification
+6. Copy the displayed Webhook URL to your DCP Dashboard integration settings
 
-## License
+**Checkout flow:**
+Customer selects "Pay with Crypto" > Order created > Widget opens > Customer pays > Order auto-updated to "Processing" > Redirect to thank-you page
 
-GPLv2 or later. See [LICENSE](https://www.gnu.org/licenses/gpl-2.0.html).
+**Webhook verification (optional but recommended):**
+The plugin supports HMAC-SHA256 webhook signature verification. When configured, the DCP backend sends a `payment.succeeded` webhook as server-side backup — the order is updated even if the customer closes their browser during payment.
+
+## Environment Detection
+
+The plugin auto-detects the environment based on your WordPress site URL:
+
+| Site URL contains | Environment | API URL |
+|-------------------|-------------|---------|
+| `localhost` / `127.0.0.1` | Local | `http://localhost:4001` |
+| `test.` / `staging.` / `dev.` | Preview | `https://preview-api.directcryptopay.com` |
+| Everything else | Production | `https://api.directcryptopay.com` |
+
+Override manually by adding to `wp-config.php`:
+```php
+define('DCP_ENV', 'production'); // or 'test' or 'local'
+```
+
+## Changelog
+
+### 1.4.0
+- Fixed script enqueue bug (inline init script was not attaching)
+- Added HMAC-SHA256 webhook signature verification
+- Added WordPress nonce to AJAX order confirmation
+- WooCommerce webhook handler: supports all 6 DCP events (succeeded, failed, expired, processing, pending, late_confirmation)
+- WooCommerce: order metadata includes `intent_id`, `chain_id`, `currency`
+- WooCommerce: passes `order_id` and `order_key` in payment metadata for webhook matching
+- Cleaned up debug console.log statements
+
+### 1.3.0
+- Added custom success/error page redirects (`success_url`, `error_url`)
+- Added multi-currency shortcode parameter
+- WooCommerce gateway: multi-chain smart selector
+
+### 1.2.0
+- Added WooCommerce payment gateway
+- Added Gutenberg block
+
+### 1.0.0
+- Initial release with shortcode support
 
 ## Support
 
-- [Documentation](https://docs.directcryptopay.com)
-- [GitHub Issues](https://github.com/directcryptopay/directcryptopay-wordpress/issues)
-- Email: contact@directcryptopay.com
+- Documentation: https://docs.directcryptopay.com
+- Dashboard: https://directcryptopay.com/dashboard
+- Support: support@directcryptopay.com
+
+## License
+
+GPLv2 or later
