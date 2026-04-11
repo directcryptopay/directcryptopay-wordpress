@@ -190,39 +190,132 @@ class WC_Gateway_DirectCryptoPay extends WC_Payment_Gateway {
         $container_id = 'dcp-wc-payment-' . $order_id;
 
         ?>
-        <div id="<?php echo esc_attr($container_id); ?>" style="text-align: center; padding: 40px 20px;">
-            <h2 style="color: #333; margin-bottom: 20px;"><?php esc_html_e('Complete Your Payment', 'directcryptopay'); ?></h2>
-            <p style="color: #666; margin-bottom: 30px;">
-                <?php esc_html_e('Order Total:', 'directcryptopay'); ?> <strong><?php echo wc_price($amount); ?></strong><br>
-                <?php esc_html_e('Payment will be processed via cryptocurrency', 'directcryptopay'); ?>
-            </p>
+        <style>
+            #<?php echo esc_attr($container_id); ?> { display: none; }
+            .dcp-overlay {
+                position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(255,255,255,0.97); z-index: 99999;
+                display: flex; align-items: center; justify-content: center;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            }
+            .dcp-card {
+                text-align: center; max-width: 420px; width: 90%; padding: 48px 32px;
+            }
+            .dcp-amount {
+                font-size: 36px; font-weight: 700; color: #1a1a2e; margin: 0 0 4px;
+            }
+            .dcp-label {
+                font-size: 14px; color: #888; margin: 0 0 36px; letter-spacing: 0.5px;
+            }
 
-            <div id="dcp-payment-status" style="margin: 20px 0;">
-                <div style="display: inline-block; padding: 15px 30px; background: #f0f0f0; border-radius: 8px;">
-                    <span style="font-size: 16px; color: #666;"><?php esc_html_e('Initializing payment widget...', 'directcryptopay'); ?></span>
+            /* Spinner */
+            .dcp-spinner {
+                width: 56px; height: 56px; margin: 0 auto 24px;
+                border: 3px solid #e5e7eb; border-top-color: #6366f1;
+                border-radius: 50%; animation: dcp-spin 0.8s linear infinite;
+            }
+            @keyframes dcp-spin { to { transform: rotate(360deg); } }
+
+            /* Checkmark */
+            .dcp-check {
+                width: 64px; height: 64px; margin: 0 auto 24px;
+                background: #10b981; border-radius: 50%;
+                display: flex; align-items: center; justify-content: center;
+                animation: dcp-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            }
+            .dcp-check svg { width: 32px; height: 32px; }
+            @keyframes dcp-pop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+
+            /* Error icon */
+            .dcp-error-icon {
+                width: 64px; height: 64px; margin: 0 auto 24px;
+                background: #ef4444; border-radius: 50%;
+                display: flex; align-items: center; justify-content: center;
+                animation: dcp-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            }
+            .dcp-error-icon svg { width: 32px; height: 32px; }
+
+            .dcp-status-text {
+                font-size: 18px; font-weight: 600; color: #1a1a2e; margin: 0 0 8px;
+            }
+            .dcp-status-sub {
+                font-size: 14px; color: #888; margin: 0 0 32px;
+            }
+            .dcp-cancel-link {
+                font-size: 13px; color: #aaa; text-decoration: none;
+                transition: color 0.2s;
+            }
+            .dcp-cancel-link:hover { color: #666; }
+
+            /* Progress bar */
+            .dcp-progress {
+                width: 200px; height: 3px; background: #e5e7eb;
+                border-radius: 2px; margin: 0 auto 32px; overflow: hidden;
+            }
+            .dcp-progress-bar {
+                height: 100%; width: 30%; background: #6366f1;
+                border-radius: 2px; animation: dcp-progress 1.5s ease-in-out infinite;
+            }
+            @keyframes dcp-progress {
+                0% { width: 10%; margin-left: 0; }
+                50% { width: 40%; margin-left: 30%; }
+                100% { width: 10%; margin-left: 90%; }
+            }
+        </style>
+
+        <div id="<?php echo esc_attr($container_id); ?>"></div>
+
+        <div class="dcp-overlay" id="dcp-overlay">
+            <div class="dcp-card">
+                <p class="dcp-amount"><?php echo wc_price($amount); ?></p>
+                <p class="dcp-label">Crypto Payment</p>
+
+                <div id="dcp-icon-area">
+                    <div class="dcp-spinner"></div>
+                </div>
+
+                <div id="dcp-progress-area">
+                    <div class="dcp-progress"><div class="dcp-progress-bar"></div></div>
+                </div>
+
+                <p class="dcp-status-text" id="dcp-status-text">Initializing wallet...</p>
+                <p class="dcp-status-sub" id="dcp-status-sub">The payment widget will open shortly</p>
+
+                <div id="dcp-cancel-area">
+                    <a href="<?php echo esc_url($cancel_url); ?>" class="dcp-cancel-link">Cancel and return to cart</a>
                 </div>
             </div>
-
-            <p style="margin-top: 20px;">
-                <a href="<?php echo esc_url($cancel_url); ?>" style="color: #999; text-decoration: none;">
-                    <?php esc_html_e('Cancel and return to cart', 'directcryptopay'); ?>
-                </a>
-            </p>
         </div>
 
         <script>
         (function() {
-            function updateStatus(message, type) {
-                var statusDiv = document.getElementById('dcp-payment-status');
-                if (!statusDiv) return;
-                var colors = {
-                    info:       { bg: '#f0f0f0', text: '#666' },
-                    success:    { bg: '#d1fae5', text: '#065f46' },
-                    error:      { bg: '#fee2e2', text: '#991b1b' },
-                    processing: { bg: '#dbeafe', text: '#1e40af' }
-                };
-                var c = colors[type] || colors.info;
-                statusDiv.innerHTML = '<div style="display:inline-block;padding:15px 30px;background:' + c.bg + ';border-radius:8px;"><span style="font-size:16px;color:' + c.text + ';">' + message + '</span></div>';
+            var iconArea     = document.getElementById('dcp-icon-area');
+            var progressArea = document.getElementById('dcp-progress-area');
+            var statusText   = document.getElementById('dcp-status-text');
+            var statusSub    = document.getElementById('dcp-status-sub');
+            var cancelArea   = document.getElementById('dcp-cancel-area');
+
+            function showSuccess(title, subtitle) {
+                iconArea.innerHTML = '<div class="dcp-check"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>';
+                progressArea.style.display = 'none';
+                statusText.textContent = title;
+                statusText.style.color = '#065f46';
+                statusSub.textContent = subtitle;
+                cancelArea.style.display = 'none';
+            }
+
+            function showError(title, subtitle) {
+                iconArea.innerHTML = '<div class="dcp-error-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></div>';
+                progressArea.style.display = 'none';
+                statusText.textContent = title;
+                statusText.style.color = '#991b1b';
+                statusSub.textContent = subtitle;
+                statusSub.style.color = '#b91c1c';
+            }
+
+            function showProcessing(title, subtitle) {
+                statusText.textContent = title;
+                statusSub.textContent = subtitle;
             }
 
             function initializePayment() {
@@ -232,7 +325,7 @@ class WC_Gateway_DirectCryptoPay extends WC_Payment_Gateway {
                 }
 
                 DCP.init({ baseURL: '<?php echo esc_js($wc_api_url); ?>' });
-                updateStatus('Preparing payment...', 'processing');
+                showProcessing('Preparing payment...', 'Connecting to DirectCryptoPay');
 
                 DCP.Payment({
                     integrationId: '<?php echo esc_js($this->integration_id); ?>',
@@ -243,29 +336,89 @@ class WC_Gateway_DirectCryptoPay extends WC_Payment_Gateway {
                     },
                     onStatus: function(status) {
                         switch(status.type) {
+                            case 'awaiting_signature':
+                                showProcessing('Confirm in your wallet', 'Please approve the transaction in your wallet');
+                                break;
                             case 'submitted':
-                                updateStatus('Transaction submitted! Verifying on blockchain...', 'processing');
+                                showProcessing('Transaction sent!', 'Verifying on blockchain...');
+                                cancelArea.style.display = 'none';
+                                pollBackendStatus(status.txHash, status.paymentId);
                                 break;
                             case 'confirmed':
-                                updateStatus('Payment confirmed! Redirecting...', 'success');
+                                showSuccess('Payment confirmed!', 'Redirecting to your order...');
+                                cancelArea.style.display = 'none';
                                 markOrderPaid(status.txHash, status.paymentId);
                                 setTimeout(function() {
                                     window.location.href = '<?php echo esc_js($return_url); ?>';
                                 }, 2000);
                                 break;
                             case 'failed':
-                                updateStatus('Payment failed. Please try again.', 'error');
+                                showError('Payment failed', 'The transaction could not be completed. Please try again.');
                                 break;
                             case 'rejected':
-                                updateStatus('Transaction rejected. You can try again or cancel.', 'error');
+                                showError('Transaction declined', 'The transaction was rejected by your wallet.');
                                 break;
                         }
                     }
                 }).catch(function(error) {
-                    if (error.message && !error.message.includes('User rejected')) {
-                        updateStatus('Payment error: ' + error.message, 'error');
+                    if (error.message && error.message.includes('User rejected')) {
+                        showError('Transaction cancelled', 'You cancelled the transaction. You can try again below.');
+                        cancelArea.innerHTML = '<a href="javascript:location.reload()" style="display:inline-block;padding:12px 32px;background:#6366f1;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;margin-bottom:12px;">Try Again</a><br><a href="<?php echo esc_url($cancel_url); ?>" class="dcp-cancel-link">Cancel order</a>';
+                        cancelArea.style.display = '';
+                        return;
                     }
+                    showError('Payment error', error.message || 'An unexpected error occurred.');
                 });
+            }
+
+            function pollBackendStatus(txHash, paymentId) {
+                var apiUrl = '<?php echo esc_js($wc_api_url); ?>';
+                var attempts = 0;
+                var maxAttempts = 60; // 60 x 2s = 2 minutes
+
+                function poll() {
+                    attempts++;
+                    fetch(apiUrl + '/pay/payment-status/' + encodeURIComponent(txHash))
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                            if (data.status === 'confirmed') {
+                                showSuccess('Payment confirmed!', 'Redirecting to your order...');
+                                markOrderPaid(txHash, paymentId);
+                                setTimeout(function() {
+                                    window.location.href = '<?php echo esc_js($return_url); ?>';
+                                }, 2000);
+                            } else if (data.status === 'failed') {
+                                showError('Payment failed', 'The transaction failed on-chain. Please try again.');
+                            } else if (attempts >= maxAttempts) {
+                                // Timeout — payment is still processing, redirect anyway
+                                showSuccess('Payment processing!', 'Your order is being confirmed. Redirecting...');
+                                markOrderPaid(txHash, paymentId);
+                                setTimeout(function() {
+                                    window.location.href = '<?php echo esc_js($return_url); ?>';
+                                }, 2000);
+                            } else {
+                                // Still pending — update subtitle with progress dots
+                                var dots = '.'.repeat((attempts % 3) + 1);
+                                showProcessing('Transaction sent!', 'Verifying on blockchain' + dots);
+                                setTimeout(poll, 2000);
+                            }
+                        })
+                        .catch(function() {
+                            // Network error — retry silently
+                            if (attempts < maxAttempts) {
+                                setTimeout(poll, 2000);
+                            } else {
+                                showSuccess('Payment processing!', 'Your order is being confirmed. Redirecting...');
+                                markOrderPaid(txHash, paymentId);
+                                setTimeout(function() {
+                                    window.location.href = '<?php echo esc_js($return_url); ?>';
+                                }, 2000);
+                            }
+                        });
+                }
+
+                // Start first poll after a short delay (let backend index the tx)
+                setTimeout(poll, 2000);
             }
 
             function markOrderPaid(txHash, paymentId) {

@@ -101,6 +101,13 @@ define('DCP_ENV', 'production'); // or 'test' or 'local'
 
 ## Changelog
 
+### 1.5.0
+- WooCommerce: real-time payment status polling (polls backend every 2s for on-chain confirmation)
+- WooCommerce: full-screen payment overlay with animated progress states (spinner → checkmark)
+- WooCommerce: proper handling of `submitted` status for integration payments
+- Shortcode: handle both `submitted` and `confirmed` status as success
+- Improved error recovery (Try Again button on wallet rejection)
+
 ### 1.4.0
 - Fixed script enqueue bug (inline init script was not attaching)
 - Added HMAC-SHA256 webhook signature verification
