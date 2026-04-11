@@ -3,7 +3,7 @@
  * Plugin Name: DirectCryptoPay
  * Plugin URI:  https://directcryptopay.com
  * Description: Accept crypto payments and donations directly on your WordPress site. Includes WooCommerce gateway. Web3, Non-custodial, No middlemen.
- * Version:     1.4.0
+ * Version:     1.5.0
  * Author:      DirectCryptoPay
  * Author URI:  https://directcryptopay.com
  * License:     GPLv2 or later
@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
 
 define('DCP_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('DCP_PLUGIN_URL', plugin_dir_url(__FILE__));
-define('DCP_VERSION', '1.4.0');
+define('DCP_VERSION', '1.5.0');
 
 /**
  * Add Settings Menu
@@ -416,7 +416,7 @@ function dcp_pay_shortcode($atts) {
                     integrationId: '<?php echo esc_js($public_id); ?>',
                     amount_usd: '<?php echo $amount; ?>',
                     onStatus: function(status) {
-                        if (status.type === 'confirmed') {
+                        if (status.type === 'confirmed' || status.type === 'submitted') {
                             var successUrl = '<?php echo esc_js($success_url); ?>';
                             if (successUrl) {
                                 var params = new URLSearchParams({
