@@ -664,6 +664,7 @@ function dcp_mark_order_paid() {
     if ($intent_id) {
         $order->update_meta_data('_dcp_intent_id', $intent_id);
     }
+    $order->update_meta_data('_dcp_payment_method', 'crypto');
     $order->save();
 
     wp_send_json_success(array(
@@ -671,4 +672,99 @@ function dcp_mark_order_paid() {
         'order_id' => $order_id,
         'status'   => $order->get_status()
     ));
+}
+
+/**
+ * ========================================
+ * WooCommerce Order Meta Box — DCP Details
+ * ========================================
+ */
+add_action('add_meta_boxes', 'dcp_add_order_meta_box');
+
+function dcp_add_order_meta_box() {
+    $screen = class_exists('\Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController')
+        && wc_get_container()->get(\Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController::class)->custom_orders_table_usage_is_enabled()
+        ? wc_get_page_screen_id('shop-order')
+        : 'shop_order';
+
+    add_meta_box(
+        'dcp-payment-details',
+        '💎 DirectCryptoPay Payment',
+        'dcp_render_order_meta_box',
+        $screen,
+        'side',
+        'high'
+    );
+}
+
+function dcp_render_order_meta_box($post_or_order) {
+    $order = ($post_or_order instanceof WC_Order) ? $post_or_order : wc_get_order($post_or_order->ID);
+    if (!$order) return;
+
+    // Only show for DCP orders
+    if ($order->get_payment_method() !== 'directcryptopay') {
+        echo '<p style="color: #999; font-style: italic;">Not a DirectCryptoPay payment.</p>';
+        return;
+    }
+
+    $tx_hash   = $order->get_meta('_dcp_tx_hash');
+    $intent_id = $order->get_meta('_dcp_intent_id');
+    $chain_id  = $order->get_meta('_dcp_chain_id');
+    $currency  = $order->get_meta('_dcp_currency');
+
+    // Chain name mapping
+    $chains = array(
+        1     => 'Ethereum',
+        137   => 'Polygon',
+        56    => 'BNB Chain',
+        42161 => 'Arbitrum',
+        10    => 'Optimism',
+        8453  => 'Base',
+        11155111 => 'Sepolia (Testnet)',
+        80002 => 'Amoy (Testnet)',
+        97    => 'BSC Testnet',
+    );
+
+    // Explorer URL mapping
+    $explorers = array(
+        1     => 'https://etherscan.io/tx/',
+        137   => 'https://polygonscan.com/tx/',
+        56    => 'https://bscscan.com/tx/',
+        42161 => 'https://arbiscan.io/tx/',
+        10    => 'https://optimistic.etherscan.io/tx/',
+        8453  => 'https://basescan.org/tx/',
+        11155111 => 'https://sepolia.etherscan.io/tx/',
+        80002 => 'https://amoy.polygonscan.com/tx/',
+        97    => 'https://testnet.bscscan.com/tx/',
+    );
+
+    $chain_name = isset($chains[(int)$chain_id]) ? $chains[(int)$chain_id] : '';
+    $explorer_url = isset($explorers[(int)$chain_id]) ? $explorers[(int)$chain_id] : '';
+
+    echo '<table style="width:100%; font-size:13px; border-collapse:collapse;">';
+
+    if ($tx_hash) {
+        $short_hash = substr($tx_hash, 0, 10) . '...' . substr($tx_hash, -6);
+        $link = ($explorer_url && $tx_hash) ? '<a href="' . esc_url($explorer_url . $tx_hash) . '" target="_blank" style="color:#3b82f6; text-decoration:none;">' . esc_html($short_hash) . ' ↗</a>' : esc_html($short_hash);
+        echo '<tr><td style="padding:6px 0; color:#666; vertical-align:top;">TX Hash</td><td style="padding:6px 0; font-family:monospace; word-break:break-all;">' . $link . '</td></tr>';
+    }
+
+    if ($chain_name) {
+        echo '<tr><td style="padding:6px 0; color:#666;">Network</td><td style="padding:6px 0;">' . esc_html($chain_name) . '</td></tr>';
+    }
+
+    if ($currency) {
+        echo '<tr><td style="padding:6px 0; color:#666;">Currency</td><td style="padding:6px 0; font-weight:600;">' . esc_html(strtoupper($currency)) . '</td></tr>';
+    }
+
+    if ($intent_id) {
+        $short_intent = strlen($intent_id) > 20 ? substr($intent_id, 0, 16) . '...' : $intent_id;
+        echo '<tr><td style="padding:6px 0; color:#666;">Intent ID</td><td style="padding:6px 0; font-family:monospace; font-size:12px;">' . esc_html($short_intent) . '</td></tr>';
+    }
+
+    if (!$tx_hash && !$intent_id) {
+        echo '<tr><td colspan="2" style="padding:6px 0; color:#999; font-style:italic;">Payment data will appear after confirmation.</td></tr>';
+    }
+
+    echo '</table>';
 }
