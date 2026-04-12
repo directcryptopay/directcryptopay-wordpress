@@ -38,10 +38,13 @@ function dcp_create_menu() {
 
 function dcp_register_settings() {
     register_setting('dcp-settings-group', 'dcp_public_id');
+    register_setting('dcp-settings-group', 'dcp_webhook_secret');
 }
 
 function dcp_settings_page() {
     $public_id = get_option('dcp_public_id', '');
+    $webhook_secret = get_option('dcp_webhook_secret', '');
+    $webhook_url = add_query_arg('wc-api', 'wc_gateway_directcryptopay', home_url('/'));
     $is_configured = !empty($public_id);
     ?>
     <div class="wrap">
@@ -133,6 +136,43 @@ function dcp_settings_page() {
                             3. Copy the <strong>Integration ID</strong> from the "Integration ID" column (starts with <code>int_</code>)<br>
                             4. Paste it in the field above<br>
                             <span style="color: #dc2626;">⚠️ Important:</span> Use the <strong>Integration ID</strong>, not the integration name.
+                        </p>
+                    </td>
+                </tr>
+            </table>
+
+            <h2 style="margin-top: 30px;">🔗 Webhook Configuration <span style="font-size: 13px; font-weight: normal; color: #6b7280;">(Optional)</span></h2>
+            <p style="color: #6b7280; margin-bottom: 15px;">Webhooks allow your WordPress site to receive real-time payment notifications from DirectCryptoPay.</p>
+
+            <table class="form-table">
+                <tr valign="top">
+                    <th scope="row">
+                        <label>Webhook URL</label>
+                    </th>
+                    <td>
+                        <code style="display: inline-block; background: #f3f4f6; padding: 8px 14px; border-radius: 6px; font-size: 13px; border: 1px solid #e5e7eb; user-select: all;"><?php echo esc_html($webhook_url); ?></code>
+                        <p class="description">
+                            Copy this URL and paste it in your <a href="https://directcryptopay.com/dashboard/integrations" target="_blank" style="color: #3b82f6; text-decoration: none; font-weight: 500;">DCP Dashboard → Integrations → Webhook URL</a>.
+                        </p>
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th scope="row">
+                        <label for="dcp_webhook_secret">Webhook Secret</label>
+                    </th>
+                    <td>
+                        <input
+                            type="text"
+                            id="dcp_webhook_secret"
+                            name="dcp_webhook_secret"
+                            value="<?php echo esc_attr($webhook_secret); ?>"
+                            class="regular-text"
+                            placeholder="whsec_..."
+                            style="font-family: monospace; font-size: 14px;"
+                        />
+                        <p class="description">
+                            Copy the <strong>Webhook Secret</strong> from your DCP Dashboard → Integrations → click your integration → Webhook Secret (starts with <code>whsec_</code>).<br>
+                            Used to verify that incoming webhooks are genuinely from DirectCryptoPay.
                         </p>
                     </td>
                 </tr>
