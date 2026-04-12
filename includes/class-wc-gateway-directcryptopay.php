@@ -124,7 +124,7 @@ class WC_Gateway_DirectCryptoPay extends WC_Payment_Gateway {
             'webhook_info' => array(
                 'title'       => 'Webhook',
                 'type'        => 'title',
-                'description' => 'Webhook URL: <code>' . esc_html($webhook_url) . '</code><br>Webhook Secret: <code>' . (empty(get_option('dcp_webhook_secret', '')) ? 'Not configured' : '••••••' . substr(get_option('dcp_webhook_secret', ''), -6)) . '</code><br><a href="' . esc_url(admin_url('admin.php?page=dcp-settings')) . '">Configure Webhook</a>',
+                'description' => 'Webhook URL: <code>' . esc_html($webhook_url) . '</code><br>Webhook Secret: <code>' . esc_html(get_option('dcp_webhook_secret', '') ?: 'Not configured') . '</code><br><a href="' . esc_url(admin_url('admin.php?page=dcp-settings')) . '">Configure Webhook Secret</a>',
             ),
         );
     }
