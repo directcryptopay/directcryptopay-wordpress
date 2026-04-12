@@ -628,6 +628,8 @@ function dcp_mark_order_paid() {
     $order_key = sanitize_text_field($_POST['order_key']);
     $tx_hash   = sanitize_text_field($_POST['tx_hash']);
     $intent_id = isset($_POST['intent_id']) ? sanitize_text_field($_POST['intent_id']) : '';
+    $chain_id  = isset($_POST['chain_id']) ? intval($_POST['chain_id']) : 0;
+    $currency  = isset($_POST['currency']) ? sanitize_text_field($_POST['currency']) : '';
 
     // Verify nonce
     if (!wp_verify_nonce($_POST['_wpnonce'] ?? '', 'dcp_mark_order_paid_' . $order_id)) {
@@ -663,6 +665,12 @@ function dcp_mark_order_paid() {
     $order->update_meta_data('_dcp_tx_hash', $tx_hash);
     if ($intent_id) {
         $order->update_meta_data('_dcp_intent_id', $intent_id);
+    }
+    if ($chain_id) {
+        $order->update_meta_data('_dcp_chain_id', $chain_id);
+    }
+    if ($currency) {
+        $order->update_meta_data('_dcp_currency', $currency);
     }
     $order->update_meta_data('_dcp_payment_method', 'crypto');
     $order->save();

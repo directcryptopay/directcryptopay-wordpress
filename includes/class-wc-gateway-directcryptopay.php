@@ -315,6 +315,8 @@ class WC_Gateway_DirectCryptoPay extends WC_Payment_Gateway {
                 statusSub.textContent = subtitle;
             }
 
+            var paymentChainId = 0;
+
             function initializePayment() {
                 if (typeof DCP === 'undefined') {
                     setTimeout(initializePayment, 200);
@@ -332,6 +334,8 @@ class WC_Gateway_DirectCryptoPay extends WC_Payment_Gateway {
                         order_key: '<?php echo esc_js($order_key); ?>'
                     },
                     onStatus: function(status) {
+                        if (status.chainId) paymentChainId = status.chainId;
+
                         switch(status.type) {
                             case 'awaiting_signature':
                                 showProcessing('Confirm in your wallet', 'Please approve the transaction in your wallet');
@@ -379,8 +383,9 @@ class WC_Gateway_DirectCryptoPay extends WC_Payment_Gateway {
                         .then(function(r) { return r.json(); })
                         .then(function(data) {
                             if (data.status === 'confirmed') {
+                                if (data.chain_id) paymentChainId = data.chain_id;
                                 showSuccess('Payment confirmed!', 'Redirecting to your order...');
-                                markOrderPaid(txHash, paymentId);
+                                markOrderPaid(txHash, paymentId, data.currency || '');
                                 setTimeout(function() {
                                     window.location.href = '<?php echo esc_js($return_url); ?>';
                                 }, 2000);
@@ -418,13 +423,15 @@ class WC_Gateway_DirectCryptoPay extends WC_Payment_Gateway {
                 setTimeout(poll, 2000);
             }
 
-            function markOrderPaid(txHash, paymentId) {
+            function markOrderPaid(txHash, paymentId, currency) {
                 var data = new FormData();
                 data.append('action', 'dcp_mark_order_paid');
                 data.append('order_id', '<?php echo esc_js($order_id); ?>');
                 data.append('order_key', '<?php echo esc_js($order_key); ?>');
                 data.append('tx_hash', txHash || '');
                 data.append('intent_id', paymentId || '');
+                data.append('chain_id', paymentChainId || '');
+                data.append('currency', currency || '');
                 data.append('_wpnonce', '<?php echo esc_js($nonce); ?>');
 
                 fetch('<?php echo esc_js(admin_url('admin-ajax.php')); ?>', {
