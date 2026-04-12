@@ -60,7 +60,11 @@ class WC_Gateway_DirectCryptoPay extends WC_Payment_Gateway {
         $this->title          = $this->get_option('title');
         $this->description    = $this->get_option('description');
         $this->enabled        = $this->get_option('enabled');
+        // Webhook secret: prefer WooCommerce setting, fallback to DCP global setting
         $this->webhook_secret = $this->get_option('webhook_secret');
+        if (empty($this->webhook_secret)) {
+            $this->webhook_secret = get_option('dcp_webhook_secret', '');
+        }
 
         // Get Integration ID from global plugin settings
         $this->integration_id = get_option('dcp_public_id', '');
@@ -112,22 +116,15 @@ class WC_Gateway_DirectCryptoPay extends WC_Payment_Gateway {
                     'USDT' => 'Tether (USDT)',
                 )
             ),
-            'webhook_secret' => array(
-                'title'       => 'Webhook Secret',
-                'type'        => 'password',
-                'description' => 'Your webhook secret from the DCP Dashboard (starts with <code>whsec_</code>). Used to verify webhook signatures. Optional but recommended.',
-                'default'     => '',
-                'desc_tip'    => false,
-            ),
             'integration_info' => array(
                 'title'       => 'Integration ID',
                 'type'        => 'title',
                 'description' => 'Using Integration ID from DirectCryptoPay settings: <code>' . esc_html(get_option('dcp_public_id', 'Not configured')) . '</code><br><a href="' . esc_url(admin_url('admin.php?page=dcp-settings')) . '">Configure Integration ID</a>',
             ),
-            'webhook_url_info' => array(
-                'title'       => 'Webhook URL',
+            'webhook_info' => array(
+                'title'       => 'Webhook',
                 'type'        => 'title',
-                'description' => 'Set this URL in your DCP Dashboard → Integrations → Webhook URL:<br><code>' . esc_html($webhook_url) . '</code>',
+                'description' => 'Webhook URL: <code>' . esc_html($webhook_url) . '</code><br>Webhook Secret: <code>' . (empty(get_option('dcp_webhook_secret', '')) ? 'Not configured' : '••••••' . substr(get_option('dcp_webhook_secret', ''), -6)) . '</code><br><a href="' . esc_url(admin_url('admin.php?page=dcp-settings')) . '">Configure Webhook</a>',
             ),
         );
     }
