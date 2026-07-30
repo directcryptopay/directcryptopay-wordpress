@@ -3,7 +3,7 @@
  * Plugin Name: DirectCryptoPay
  * Plugin URI:  https://directcryptopay.com
  * Description: Accept crypto payments and donations directly on your WordPress site. Includes WooCommerce gateway. Web3, Non-custodial, No middlemen.
- * Version:     1.5.0
+ * Version:     1.5.1
  * Author:      DirectCryptoPay
  * Author URI:  https://directcryptopay.com
  * License:     GPLv2 or later
@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
 
 define('DCP_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('DCP_PLUGIN_URL', plugin_dir_url(__FILE__));
-define('DCP_VERSION', '1.5.0');
+define('DCP_VERSION', '1.5.1');
 
 /**
  * Add Settings Menu
@@ -162,14 +162,16 @@ function dcp_settings_page() {
                     </th>
                     <td>
                         <input
-                            type="text"
+                            type="password"
                             id="dcp_webhook_secret"
                             name="dcp_webhook_secret"
                             value="<?php echo esc_attr($webhook_secret); ?>"
                             class="regular-text"
                             placeholder="whsec_..."
+                            autocomplete="off"
                             style="font-family: monospace; font-size: 14px;"
                         />
+                        <button type="button" class="button" onclick="var f=document.getElementById('dcp_webhook_secret');f.type=(f.type==='password'?'text':'password');">👁 Reveal</button>
                         <p class="description">
                             Copy the <strong>Webhook Secret</strong> from your DCP Dashboard → Integrations → click your integration → Webhook Secret (starts with <code>whsec_</code>).<br>
                             Used to verify that incoming webhooks are genuinely from DirectCryptoPay.
@@ -301,6 +303,38 @@ const paymentId = params.get('payment_id');
 }
 
 /**
+ * Admin notice — the webhook secret is REQUIRED since 1.5.1.
+ *
+ * Before 1.5.1 the browser could mark an order as paid. That path has been
+ * removed: only the HMAC-signed webhook may complete an order. A store with no
+ * webhook secret would therefore leave orders stuck in "on-hold", so warn loudly.
+ */
+add_action('admin_notices', 'dcp_webhook_secret_notice');
+
+function dcp_webhook_secret_notice() {
+    if (!current_user_can('manage_woocommerce') && !current_user_can('manage_options')) {
+        return;
+    }
+    if (!empty(get_option('dcp_webhook_secret', ''))) {
+        return;
+    }
+    if (!dcp_is_woocommerce_active()) {
+        return;
+    }
+    $gateways = get_option('woocommerce_directcryptopay_settings', array());
+    if (!is_array($gateways) || ($gateways['enabled'] ?? 'no') !== 'yes') {
+        return;
+    }
+    printf(
+        '<div class="notice notice-error"><p><strong>%s</strong> %s <a href="%s">%s</a></p></div>',
+        esc_html__('DirectCryptoPay — action required:', 'directcryptopay'),
+        esc_html__('no Webhook Secret is configured. Since version 1.5.1 payments are confirmed exclusively by the signed webhook, so orders will remain On hold until you set it.', 'directcryptopay'),
+        esc_url(admin_url('admin.php?page=dcp-settings')),
+        esc_html__('Configure it now →', 'directcryptopay')
+    );
+}
+
+/**
  * Enqueue Widget Script
  */
 add_action('wp_enqueue_scripts', 'dcp_load_scripts');
@@ -319,7 +353,9 @@ function dcp_load_scripts() {
         $site_url = get_site_url();
         if (strpos($site_url, 'localhost') !== false || strpos($site_url, '127.0.0.1') !== false) {
             $env = 'local';
-        } elseif (strpos($site_url, 'test.') !== false || strpos($site_url, 'staging.') !== false || strpos($site_url, 'dev.') !== false) {
+        // SECURITY/CORRECTNESS — match only a leading host label, never a
+        // substring anywhere in the URL (e.g. "bestdeveloper.com" must stay production).
+        } elseif (preg_match('#^https?://(test|staging|dev)\.#i', $site_url)) {
             $env = 'test';
         } else {
             $env = 'production';
@@ -383,7 +419,9 @@ function dcp_pay_shortcode($atts) {
         $site_url = get_site_url();
         if (strpos($site_url, 'localhost') !== false || strpos($site_url, '127.0.0.1') !== false) {
             $shortcode_env = 'local';
-        } elseif (strpos($site_url, 'test.') !== false || strpos($site_url, 'staging.') !== false || strpos($site_url, 'dev.') !== false) {
+        // SECURITY/CORRECTNESS — match only a leading host label, never a
+        // substring anywhere in the URL (e.g. "bestdeveloper.com" must stay production).
+        } elseif (preg_match('#^https?://(test|staging|dev)\.#i', $site_url)) {
             $shortcode_env = 'test';
         } else {
             $shortcode_env = 'production';
@@ -654,15 +692,29 @@ function dcp_mark_order_paid() {
         return;
     }
 
-    $order->payment_complete($tx_hash);
+    /*
+     * SECURITY — the client is NEVER authoritative for payment state.
+     *
+     * This endpoint is reachable unauthenticated (guest checkout), and both the
+     * order key and the nonce are legitimately held by the buyer for their own
+     * order. Neither is an authorisation to mark an order as paid.
+     *
+     * The order is therefore only moved to "on-hold" as a UX acknowledgement.
+     * Only the HMAC-signed webhook from the DCP backend — which verifies the
+     * transaction on-chain — may call payment_complete().
+     */
+    if ($order->has_status('pending')) {
+        $order->update_status(
+            'on-hold',
+            sprintf(
+                __('DirectCryptoPay: transaction reported by the buyer, awaiting on-chain confirmation.%sTX: %s%s', 'directcryptopay'),
+                PHP_EOL, $tx_hash,
+                $intent_id ? PHP_EOL . 'Intent: ' . $intent_id : ''
+            )
+        );
+    }
 
-    $order->add_order_note(sprintf(
-        __('DirectCryptoPay: payment confirmed (client-side).%sTX: %s%s', 'directcryptopay'),
-        PHP_EOL, $tx_hash,
-        $intent_id ? PHP_EOL . 'Intent: ' . $intent_id : ''
-    ));
-
-    $order->update_meta_data('_dcp_tx_hash', $tx_hash);
+    $order->update_meta_data('_dcp_reported_tx_hash', $tx_hash);
     if ($intent_id) {
         $order->update_meta_data('_dcp_intent_id', $intent_id);
     }
@@ -676,7 +728,7 @@ function dcp_mark_order_paid() {
     $order->save();
 
     wp_send_json_success(array(
-        'message'  => 'Order marked as paid',
+        'message'  => 'Transaction recorded, awaiting on-chain confirmation',
         'order_id' => $order_id,
         'status'   => $order->get_status()
     ));

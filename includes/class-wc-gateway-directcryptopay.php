@@ -124,7 +124,9 @@ class WC_Gateway_DirectCryptoPay extends WC_Payment_Gateway {
             'webhook_info' => array(
                 'title'       => 'Webhook',
                 'type'        => 'title',
-                'description' => 'Webhook URL: <code>' . esc_html($webhook_url) . '</code><br>Webhook Secret: <code>' . esc_html(get_option('dcp_webhook_secret', '') ?: 'Not configured') . '</code><br><a href="' . esc_url(admin_url('admin.php?page=dcp-settings')) . '">Configure Webhook Secret</a>',
+                // SECURITY — never render the secret in full. Show only a masked
+                // hint so an admin can confirm which secret is configured.
+                'description' => 'Webhook URL: <code>' . esc_html($webhook_url) . '</code><br>Webhook Secret: <code>' . esc_html(self::mask_secret(get_option('dcp_webhook_secret', ''))) . '</code><br><a href="' . esc_url(admin_url('admin.php?page=dcp-settings')) . '">Configure Webhook Secret</a>',
             ),
         );
     }
@@ -455,15 +457,20 @@ class WC_Gateway_DirectCryptoPay extends WC_Payment_Gateway {
     public function webhook_handler() {
         $raw_body = file_get_contents('php://input');
 
-        // Verify HMAC signature if webhook secret is configured
-        if (!empty($this->webhook_secret)) {
-            $signature_header = isset($_SERVER['HTTP_X_DCP_SIGNATURE']) ? $_SERVER['HTTP_X_DCP_SIGNATURE'] : '';
+        // SECURITY — fail closed. Without a configured secret no webhook can be
+        // trusted, so the endpoint must refuse to act rather than accept anything.
+        if (empty($this->webhook_secret)) {
+            status_header(503);
+            wp_send_json(array('error' => 'Webhook secret not configured'));
+            return;
+        }
 
-            if (!$this->verify_webhook_signature($raw_body, $signature_header)) {
-                status_header(401);
-                wp_send_json(array('error' => 'Invalid signature'));
-                return;
-            }
+        $signature_header = isset($_SERVER['HTTP_X_DCP_SIGNATURE']) ? $_SERVER['HTTP_X_DCP_SIGNATURE'] : '';
+
+        if (!$this->verify_webhook_signature($raw_body, $signature_header)) {
+            status_header(401);
+            wp_send_json(array('error' => 'Invalid signature'));
+            return;
         }
 
         $data = json_decode($raw_body, true);
@@ -484,9 +491,17 @@ class WC_Gateway_DirectCryptoPay extends WC_Payment_Gateway {
             return;
         }
 
+        // SECURITY — order_key is mandatory. order_id alone is an incrementing
+        // integer and would let a crafted payload target any order on the site.
+        if (empty($order_key)) {
+            status_header(400);
+            wp_send_json(array('error' => 'Missing order_key in metadata'));
+            return;
+        }
+
         $order = wc_get_order($order_id);
 
-        if (!$order || ($order_key && $order->get_order_key() !== $order_key)) {
+        if (!$order || !hash_equals($order->get_order_key(), $order_key)) {
             status_header(404);
             wp_send_json(array('error' => 'Order not found'));
             return;
@@ -515,11 +530,15 @@ class WC_Gateway_DirectCryptoPay extends WC_Payment_Gateway {
                 break;
 
             case 'payment.failed':
-                $reason = sanitize_text_field($data['reason'] ?? 'Unknown');
-                $order->update_status('failed', sprintf(
-                    __('DirectCryptoPay: payment failed. Reason: %s', 'directcryptopay'),
-                    $reason
-                ));
+                // SECURITY — never downgrade an order that is already paid or
+                // fulfilled; a replayed or stale event must not undo a sale.
+                if ($order->has_status(array('pending', 'on-hold'))) {
+                    $reason = sanitize_text_field($data['reason'] ?? 'Unknown');
+                    $order->update_status('failed', sprintf(
+                        __('DirectCryptoPay: payment failed. Reason: %s', 'directcryptopay'),
+                        $reason
+                    ));
+                }
                 break;
 
             case 'payment.expired':
@@ -539,6 +558,22 @@ class WC_Gateway_DirectCryptoPay extends WC_Payment_Gateway {
         }
 
         wp_send_json(array('success' => true));
+    }
+
+    /**
+     * Mask a secret for display: keep only the prefix and the last 4 characters.
+     *
+     * @param string $secret
+     * @return string
+     */
+    public static function mask_secret($secret) {
+        if (empty($secret)) {
+            return 'Not configured';
+        }
+        if (strlen($secret) <= 10) {
+            return str_repeat('•', 8);
+        }
+        return substr($secret, 0, 6) . str_repeat('•', 12) . substr($secret, -4);
     }
 
     /**
@@ -586,7 +621,8 @@ class WC_Gateway_DirectCryptoPay extends WC_Payment_Gateway {
             $site_url = get_site_url();
             if (strpos($site_url, 'localhost') !== false || strpos($site_url, '127.0.0.1') !== false) {
                 $env = 'local';
-            } elseif (strpos($site_url, 'test.') !== false || strpos($site_url, 'staging.') !== false || strpos($site_url, 'dev.') !== false) {
+            // SECURITY/CORRECTNESS — leading host label only, never a substring.
+            } elseif (preg_match('#^https?://(test|staging|dev)\.#i', $site_url)) {
                 $env = 'test';
             } else {
                 $env = 'production';
